@@ -8,6 +8,7 @@ import time
 import pandas as pd
 
 RESULT_PER_PAGE = 30
+target_url = "https://www.glassdoor.com/Job/new-zealand-data-engineer-jobs-SRCH_IL.0,11_IN186_KO12,25.htm"
 
 
 def get_job_count(driver):
@@ -66,7 +67,6 @@ def load_all_jobs(driver):
 
 
 # Set up the webdriver
-target_url = "https://www.glassdoor.com/Job/new-zealand-data-engineer-jobs-SRCH_IL.0,11_IN186_KO12,25.htm"
 driver = webdriver.Chrome()
 driver.get(target_url)
 print("Maximizing Window")
