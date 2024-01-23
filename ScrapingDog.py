@@ -1,45 +1,66 @@
+import selenium.common.exceptions
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import pandas as pd
 
-# Function to scroll to the bottom of the page
-def scroll_to_bottom(driver):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(2)  # Adjust the delay based on the time it takes for new content to load
+RESULT_PER_PAGE = 30
 
-# Function to click the "Load more" button
-# def click_load_more(driver):
-#     try:
-#         load_more_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")
-#         load_more_button.click()
-#         time.sleep(3)  # Adjust the delay based on the time it takes for new content to load
-#         return True
-#     except:
-#         return False
+
+def get_job_count(driver):
+    text = driver.find_element(By.CLASS_NAME, "SearchResultsHeader_jobCount__12dWB").text
+    job_count = split_job_count(text)
+    return job_count
+
+
+def split_job_count(s):
+    number = [int(word) for word in s.split() if word.isdigit()][0]
+    print(number)
+    return number
+
+
+def find_load_more_button(driver):
+    print("Finding Button")
+    return WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
+
 
 def click_load_more(driver):
     time.sleep(3)
-    load_more_button = driver.find_element(By.XPATH, "/html/body/div[3]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")
+    load_more_button = find_load_more_button(driver)
+    print("Found Button")
     load_more_button.click()
+    print("Clicked Button")
     time.sleep(3)  # Adjust the delay based on the time it takes for new content to load
+
+
+def close_pop_up(driver):
+    driver.implicitly_wait(2)
+    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CLASS_NAME, "CloseButton"))).click()
+    print("Closed Popup")
+    return
 
 
 # Set up the webdriver
 target_url = "https://www.glassdoor.com/Job/new-zealand-ai-jobs-SRCH_IL.0,11_IN186_KO12,14.htm"
 driver = webdriver.Chrome()
 driver.get(target_url)
+print("Maximizing Window")
 driver.maximize_window()
+print("Maximized Window")
 
-# Initial scroll to load some content
-scroll_to_bottom(driver)
 
 # Click the "Load more" button until it's not available
-for i in range  (1,10):
-    click_load_more(driver)
-    scroll_to_bottom(driver)
+for i in range(0, get_job_count(driver)//RESULT_PER_PAGE):
+    try:
+        click_load_more(driver)
+    except selenium.common.exceptions.ElementClickInterceptedException:
+        print("Found Pop-up")
+        close_pop_up(driver)
+        click_load_more(driver)
+
 
 # Retrieve the page source after loading all content
 resp = driver.page_source
