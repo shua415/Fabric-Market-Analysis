@@ -12,24 +12,43 @@ target_url = "https://www.glassdoor.com/Job/new-zealand-data-engineer-jobs-SRCH_
 
 
 def get_job_count(driver):
-    """ Gets Job Count from '___ results found' text"""
+    """
+    Gets Job Count from '___ results found' text
+
+    :param Webdriver driver: Selenium webdriver
+    :return: the number of jobs
+    :rtype: int
+    """
     text = driver.find_element(By.CLASS_NAME, "SearchResultsHeader_jobCount__12dWB").text
     job_count = split_job_count(text)
     return job_count
 
 
 def split_job_count(s):
-    """ Takes the string from get_job_count and separates the number from the string"""
+    """
+    Takes the string from get_job_count and separates the number from the string
+
+    :param string s: Full string from webpage '___ results found'
+    :return: the number inside the string
+    :rtype: int
+    """
     number = [int(word) for word in s.split() if word.isdigit()][0]
     print(number)
     return number
 
 
 def find_load_more_button(driver):
-    """ Finds the 'Show more jobs' button"""
+    """
+    Finds the 'Show more jobs' button
+
+    :param Webdriver driver: Selenium webdriver
+    :return: Show More Jobs button element
+    :rtype: WebElement
+    """
     print("Finding Button")
     time.sleep(.5)
 
+    # Button changes locations sometimes, hence the try/catch
     try:
         print('Clicked first button')
         return WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
@@ -39,15 +58,24 @@ def find_load_more_button(driver):
 
 
 def click_load_more(driver):
-    """ Clicks the load more button while printing to terminal what is happening """
+    """
+    Clicks the load more button while printing to terminal what is happening
+
+    :param Webdriver driver: Selenium webdriver
+    """
     time.sleep(1)
     load_more_button = find_load_more_button(driver)
     print("Found Button")
+    print(type(load_more_button))
     load_more_button.click()
 
 
 def close_pop_up(driver):
-    """ If popup shows then close the popup to allow show more button presses """
+    """
+    If popup shows then close the popup to allow show more button presses
+
+    :param Webdriver driver: Selenium webdriver
+    """
     time.sleep(.5)
     WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.CLASS_NAME, "CloseButton"))).click()
     print("Closed Popup")
@@ -55,7 +83,11 @@ def close_pop_up(driver):
 
 
 def load_all_jobs(driver):
-    """ Loads all the jobs by utilising job count and for loop """
+    """
+    Loads all the jobs by utilising job count and for loop
+
+    :param Webdriver driver: Selenium webdriver
+    """
     for i in range(0, get_job_count(driver)//RESULT_PER_PAGE):
         try:
             click_load_more(driver)
