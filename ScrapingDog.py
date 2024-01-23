@@ -53,8 +53,14 @@ def find_load_more_button(driver):
         print('Clicked first button')
         return WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
     except selenium.common.exceptions.TimeoutException:
-        print("Clicked second button")
-        return WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[3]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
+        try:
+            return WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[3]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
+        except selenium.common.exceptions.TimeoutException:
+            # If the button is in neither of the expected places and has moved again, this error message is thrown
+            try:
+                raise Exception("The button is not in the expected places")
+            except Exception as e:
+                print(str(e))
 
 
 def click_load_more(driver):
@@ -66,7 +72,6 @@ def click_load_more(driver):
     time.sleep(1)
     load_more_button = find_load_more_button(driver)
     print("Found Button")
-    print(type(load_more_button))
     load_more_button.click()
 
 
