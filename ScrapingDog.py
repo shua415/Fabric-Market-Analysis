@@ -11,56 +11,69 @@ RESULT_PER_PAGE = 30
 
 
 def get_job_count(driver):
+    """ Gets Job Count from '___ results found' text"""
     text = driver.find_element(By.CLASS_NAME, "SearchResultsHeader_jobCount__12dWB").text
     job_count = split_job_count(text)
     return job_count
 
 
 def split_job_count(s):
+    """ Takes the string from get_job_count and separates the number from the string"""
     number = [int(word) for word in s.split() if word.isdigit()][0]
     print(number)
     return number
 
 
 def find_load_more_button(driver):
+    """ Finds the 'Show more jobs' button"""
     print("Finding Button")
-    return WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
+    time.sleep(.5)
+
+    try:
+        print('Clicked first button')
+        return WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
+    except selenium.common.exceptions.TimeoutException:
+        print("Clicked second button")
+        return WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[3]/div[1]/div[3]/div[2]/div[1]/div[2]/div/button")))
 
 
 def click_load_more(driver):
-    time.sleep(3)
+    """ Clicks the load more button while printing to terminal what is happening """
+    time.sleep(1)
     load_more_button = find_load_more_button(driver)
     print("Found Button")
     load_more_button.click()
-    print("Clicked Button")
-    time.sleep(3)  # Adjust the delay based on the time it takes for new content to load
 
 
 def close_pop_up(driver):
-    driver.implicitly_wait(2)
-    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CLASS_NAME, "CloseButton"))).click()
+    """ If popup shows then close the popup to allow show more button presses """
+    time.sleep(.5)
+    WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.CLASS_NAME, "CloseButton"))).click()
     print("Closed Popup")
     return
 
 
+def load_all_jobs(driver):
+    """ Loads all the jobs by utilising job count and for loop """
+    for i in range(0, get_job_count(driver)//RESULT_PER_PAGE):
+        try:
+            click_load_more(driver)
+        except selenium.common.exceptions.ElementClickInterceptedException: #Catches Exception where popup blocks button
+            print("Found Pop-up")
+            close_pop_up(driver)
+            click_load_more(driver)
+    time.sleep(5)
+
+
 # Set up the webdriver
-target_url = "https://www.glassdoor.com/Job/new-zealand-ai-jobs-SRCH_IL.0,11_IN186_KO12,14.htm"
+target_url = "https://www.glassdoor.com/Job/new-zealand-data-engineer-jobs-SRCH_IL.0,11_IN186_KO12,25.htm"
 driver = webdriver.Chrome()
 driver.get(target_url)
 print("Maximizing Window")
 driver.maximize_window()
 print("Maximized Window")
 
-
-# Click the "Load more" button until it's not available
-for i in range(0, get_job_count(driver)//RESULT_PER_PAGE):
-    try:
-        click_load_more(driver)
-    except selenium.common.exceptions.ElementClickInterceptedException:
-        print("Found Pop-up")
-        close_pop_up(driver)
-        click_load_more(driver)
-
+load_all_jobs(driver)
 
 # Retrieve the page source after loading all content
 resp = driver.page_source
